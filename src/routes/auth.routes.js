@@ -111,14 +111,14 @@ router.post('/login', async (req, res) => {
     );
     
     res.json({
+        token,
       user: {
         id: user._id,
         username: user.username,
         fullName: user.fullName,
         email: user.email,
         role: user.role
-      },
-      token
+      }
     });
   } catch (error) {
     console.error('Login error:', error);

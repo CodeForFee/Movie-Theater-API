@@ -3,9 +3,21 @@ const mongoose = require('mongoose');
 const MAX_RETRIES = 5;
 const RETRY_INTERVAL = 5000; // 5 seconds
 
+// Fallback MongoDB URI for development
+const FALLBACK_MONGODB_URI = 'mongodb+srv://admin:admin123@cluster0.1qcfepw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+
 const connectWithRetry = async (retryCount = 0) => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    // Get MongoDB URI from environment or use fallback
+    const mongoUri = process.env.MONGODB_URI || FALLBACK_MONGODB_URI;
+    
+    if (!mongoUri) {
+      throw new Error('MongoDB URI is not defined in environment variables');
+    }
+
+    console.log('Attempting to connect to MongoDB...');
+    
+    const conn = await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 30000,
@@ -24,7 +36,7 @@ const connectWithRetry = async (retryCount = 0) => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     return conn;
   } catch (error) {
-    console.error(`MongoDB connection error (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error);
+    console.error(`MongoDB connection error (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error.message);
     
     if (retryCount < MAX_RETRIES - 1) {
       console.log(`Retrying connection in ${RETRY_INTERVAL/1000} seconds...`);
@@ -41,7 +53,7 @@ const connectDB = async () => {
     await connectWithRetry();
 
     mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
+      console.error('MongoDB connection error:', err.message);
       // Attempt to reconnect on error
       setTimeout(() => connectDB(), RETRY_INTERVAL);
     });
@@ -58,20 +70,20 @@ const connectDB = async () => {
         console.log('MongoDB connection closed through app termination');
         process.exit(0);
       } catch (err) {
-        console.error('Error during MongoDB connection closure:', err);
+        console.error('Error during MongoDB connection closure:', err.message);
         process.exit(1);
       }
     });
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (err) => {
-      console.error('Uncaught Exception:', err);
+      console.error('Uncaught Exception:', err.message);
       // Attempt to reconnect
       setTimeout(() => connectDB(), RETRY_INTERVAL);
     });
 
   } catch (error) {
-    console.error('Failed to connect to MongoDB after all retries:', error);
+    console.error('Failed to connect to MongoDB after all retries:', error.message);
     throw error;
   }
 };

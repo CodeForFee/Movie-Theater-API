@@ -8,7 +8,9 @@
     "dev": "nodemon --ignore 'node_modules/' src/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "postinstall": "npm run build",
+    "build": "echo 'No build step required'"
   },
   "keywords": [
     "movie",
@@ -39,3 +41,4 @@
     "node": ">=14.0.0"
   }
 }
+ 

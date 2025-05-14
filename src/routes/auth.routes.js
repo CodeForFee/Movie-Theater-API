@@ -4,6 +4,10 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 const { auth } = require('../middleware/auth.middleware');
 
+// Fallback JWT secret for development
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+
 /**
  * @swagger
  * /api/auth/register:
@@ -46,8 +50,8 @@ router.post('/register', async (req, res) => {
     
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
     );
     
     res.status(201).json({
@@ -102,8 +106,8 @@ router.post('/login', async (req, res) => {
     
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
     );
     
     res.json({
@@ -117,7 +121,8 @@ router.post('/login', async (req, res) => {
       token
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -138,7 +143,8 @@ router.get('/me', auth, async (req, res) => {
     const user = await User.findById(req.user._id).select('-password');
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Get profile error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 

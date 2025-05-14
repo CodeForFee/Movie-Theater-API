@@ -30,13 +30,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Root route
+// Root route - Redirect to API docs
 app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to Movie Theater API',
-    documentation: '/api-docs',
-    version: '1.0.0'
-  });
+  res.redirect('/api-docs');
 });
 
 // Swagger configuration
@@ -48,6 +44,14 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'API documentation for Movie Theater Management System',
     },
+    servers: [
+      {
+        url: process.env.NODE_ENV === 'production' 
+          ? 'https://movie-theater-api-production.up.railway.app'
+          : `http://localhost:${process.env.PORT}`,
+        description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
+      },
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -100,7 +104,9 @@ const startServer = async () => {
     // Check if port is in use
     const server = app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
-      console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
+      console.log(`API Documentation available at ${process.env.NODE_ENV === 'production' 
+        ? 'https://movie-theater-api-production.up.railway.app/api-docs'
+        : `http://localhost:${PORT}/api-docs`}`);
     }).on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
         console.error(`Port ${PORT} is already in use. Please try a different port.`);
